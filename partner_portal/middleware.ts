@@ -1,0 +1,3 @@
+import {NextRequest,NextResponse} from 'next/server';
+export function middleware(req:NextRequest){const p=req.nextUrl.pathname;if(p==='/login'||p==='/forgot-password'||p.startsWith('/api/'))return NextResponse.next();const role=req.cookies.get('nearnow_role')?.value;if(!role)return NextResponse.redirect(new URL('/login',req.url));const target=p.startsWith('/admin')?'admin':p.startsWith('/warehouse')?'warehouse_manager':p.startsWith('/vendor')?'vendor':null;if(target&&role!==target)return NextResponse.redirect(new URL(role==='admin'?'/admin':role==='warehouse_manager'?'/warehouse':'/vendor',req.url));return NextResponse.next()}
+export const config={matcher:['/((?!_next/static|_next/image|favicon.ico).*)']};

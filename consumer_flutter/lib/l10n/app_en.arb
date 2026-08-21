@@ -1,0 +1,284 @@
+{
+  "@@locale": "en",
+  "login": "Login",
+  "email": "Email",
+  "password": "Password",
+  "loginFailed": "Login failed",
+  "authErrorUserNotFound": "No account found with this email.",
+  "authErrorWrongPassword": "Incorrect password. Please try again.",
+  "authErrorInvalidCredential": "Incorrect email or password.",
+  "authErrorEmailInUse": "An account with this email already exists.",
+  "authErrorWeakPassword": "Password is too weak. Use at least 6 characters.",
+  "authErrorInvalidEmail": "Please enter a valid email address.",
+  "authErrorNetworkError": "Network error. Please check your connection.",
+  "authErrorTooManyRequests": "Too many attempts. Please try again later.",
+  "forgotPassword": "Forgot Password?",
+  "resetPassword": "Reset Password",
+  "resetPasswordInstructions": "Enter your email and we'll send you a 6-digit code to reset your password.",
+  "sendResetLink": "Send Code",
+  "passwordResetEmailSent": "If that email is registered, a reset code has been sent.",
+  "resetCodeLabel": "6-digit code",
+  "newPasswordLabel": "New password",
+  "resetPasswordButton": "Reset password",
+  "passwordResetSuccess": "Password reset. Please log in with your new password.",
+  "useDifferentEmail": "Use a different email",
+  "register": "Register",
+  "registrationFailed": "Registration failed",
+  "groceriesInMinutes": "Groceries in minutes",
+  "home": "Home",
+  "cart": "Cart",
+  "orders": "Orders",
+  "profile": "Profile",
+  "promoNewArrivalsTitle": "New arrivals",
+  "promoNewArrivalsSubtitle": "Up to 30% off",
+  "promoFreshPicksTitle": "Fresh picks",
+  "promoFreshPicksSubtitle": "Fruits & vegetables",
+  "promoQuickEssentialsTitle": "Quick essentials",
+  "promoQuickEssentialsSubtitle": "Free delivery over ₹499",
+  "categories": "Categories",
+  "deliverTo": "Deliver to: {label}",
+  "@deliverTo": {
+    "placeholders": {
+      "label": {
+        "type": "String"
+      }
+    }
+  },
+  "selectDeliveryAddress": "Select delivery address",
+  "language": "Language",
+  "searchProductsHint": "Search products",
+  "searchCategoryHint": "Search {category}",
+  "@searchCategoryHint": {
+    "placeholders": {
+      "category": {
+        "type": "String"
+      }
+    }
+  },
+  "bestsellers": "Bestsellers",
+  "featuredProducts": "Featured Products",
+  "shopByCategory": "Shop by Category",
+  "selectLanguage": "Select Language",
+  "filters": "Filters",
+  "priceRange": "Price Range",
+  "applyFilters": "Apply Filters",
+  "clearAllFilters": "Clear All Filters",
+  "products": "Products",
+  "allProducts": "All Products",
+  "somethingWentWrong": "Something went wrong",
+  "retry": "Retry",
+  "noProductsFound": "No products found",
+  "tryAdjustingSearch": "Try adjusting your search or filters",
+  "speechNotAvailable": "Speech recognition is not available on this device",
+  "productNotFound": "Product not found",
+  "productDetails": "Product Details",
+  "ratingReviewsCount": "{rating} ({count, plural, one{{count} review} other{{count} reviews}})",
+  "@ratingReviewsCount": {
+    "placeholders": {
+      "rating": {
+        "type": "String"
+      },
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "inStockCount": "In Stock ({count})",
+  "@inStockCount": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "outOfStock": "Out of Stock",
+  "description": "Description",
+  "reviews": "Reviews",
+  "writeAReview": "Write a Review",
+  "noReviewsYet": "No reviews yet. Be the first to review!",
+  "anonymous": "Anonymous",
+  "addToCart": "Add to Cart",
+  "defaultUserName": "User",
+  "failedToSubmitReview": "Failed to submit review",
+  "shareYourThoughts": "Share your thoughts about this product...",
+  "submitReview": "Submit Review",
+  "addedToCart": "Added {name} to cart",
+  "@addedToCart": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "addedQuantityToCart": "Added {quantity} × {name} to cart",
+  "@addedQuantityToCart": {
+    "placeholders": {
+      "quantity": {
+        "type": "int"
+      },
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "addShort": "ADD",
+  "lookingUpProduct": "Looking up product...",
+  "noProductForBarcode": "No product found for this barcode. Try another one.",
+  "somethingWentWrongTryAgain": "Something went wrong. Try again.",
+  "scanBarcode": "Scan Barcode",
+  "pointCameraAtBarcode": "Point the camera at a product barcode",
+  "takeAPhoto": "Take a photo",
+  "chooseFromGallery": "Choose from gallery",
+  "noReadableTextFound": "No readable text found in that image. Try again.",
+  "couldNotReadImage": "Could not read that image. Try again.",
+  "imageSearch": "Image Search",
+  "readingTextFromImage": "Reading text from image...",
+  "noProductsHereYet": "No products here yet",
+  "checkBackSoon": "Check back soon",
+  "cashOnDelivery": "Cash on Delivery",
+  "upi": "UPI",
+  "card": "Card",
+  "payWhenOrderArrives": "Pay when your order arrives",
+  "onlinePaymentsNotEnabled": "Selection saved; online payments are not enabled yet",
+  "paymentMethod": "Payment method",
+  "myCart": "My Cart",
+  "cartEmpty": "Your cart is empty",
+  "addItemsToGetStarted": "Add items to get started",
+  "startShopping": "Start Shopping",
+  "noDeliveryAddressSelected": "No delivery address selected",
+  "change": "Change",
+  "subtotal": "Subtotal",
+  "deliveryFee": "Delivery Fee",
+  "free": "FREE",
+  "total": "Total",
+  "placeOrderWithTotal": "Place Order • ₹{total}",
+  "@placeOrderWithTotal": {
+    "placeholders": {
+      "total": {
+        "type": "String"
+      }
+    }
+  },
+  "orderPlacedSuccessfully": "Order placed successfully",
+  "failedToPlaceOrder": "Failed to place order",
+  "noOrdersYet": "No orders yet",
+  "orderNumber": "Order #{id}",
+  "@orderNumber": {
+    "placeholders": {
+      "id": {
+        "type": "String"
+      }
+    }
+  },
+  "statusPlaced": "PLACED",
+  "statusPacked": "PACKED",
+  "statusOutForDelivery": "OUT FOR DELIVERY",
+  "statusDelivered": "DELIVERED",
+  "statusCancelled": "CANCELLED",
+  "itemsAddedToCart": "Items added to cart",
+  "orderNotFound": "Order not found",
+  "placedOn": "Placed on {date}",
+  "@placedOn": {
+    "placeholders": {
+      "date": {
+        "type": "String"
+      }
+    }
+  },
+  "deliveringToFull": "Delivering to: {name}, {address}, {city} - {pincode}",
+  "@deliveringToFull": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "address": {
+        "type": "String"
+      },
+      "city": {
+        "type": "String"
+      },
+      "pincode": {
+        "type": "String"
+      }
+    }
+  },
+  "items": "Items",
+  "reorder": "Reorder",
+  "cameraPermissionDenied": "Camera access is needed to scan barcodes. Please enable it in your device settings.",
+  "openSettings": "Open Settings",
+  "cancelOrder": "Cancel Order",
+  "cancelOrderConfirmTitle": "Cancel this order?",
+  "cancelOrderConfirmBody": "This can't be undone. Your order will be cancelled.",
+  "orderCancelled": "Order cancelled",
+  "failedToCancelOrder": "Failed to cancel order",
+  "keepOrder": "Keep Order",
+  "yesCancel": "Yes, Cancel",
+  "deleteAddressConfirmTitle": "Delete this address?",
+  "deleteAddressConfirmBody": "This can't be undone.",
+  "cancel": "Cancel",
+  "invalidPincode": "Enter a valid 6-digit pincode",
+  "myAddresses": "My Addresses",
+  "pleaseLogInToViewAddresses": "Please log in to view addresses.",
+  "pleaseLogInToContinue": "Please log in to continue",
+  "noSavedAddressesYet": "No saved addresses yet",
+  "tapAddressToUse": "Tap an address to use it for delivery",
+  "nowDeliveringTo": "Now delivering to: {label}",
+  "@nowDeliveringTo": {
+    "placeholders": {
+      "label": {
+        "type": "String"
+      }
+    }
+  },
+  "selected": "SELECTED",
+  "addressSavedNoLocation": "Address saved, but we couldn't pinpoint its exact location",
+  "editAddress": "Edit Address",
+  "addAddress": "Add Address",
+  "label": "Label",
+  "fullName": "Full name",
+  "address": "Address",
+  "city": "City",
+  "pincode": "Pincode",
+  "locatingAddress": "Locating address...",
+  "saveAddress": "Save Address",
+  "labelHomeWork": "Label (Home/Work) *",
+  "fullNameRequired": "Full Name *",
+  "phoneRequired": "Phone *",
+  "addressLineRequired": "Address Line *",
+  "cityRequired": "City *",
+  "pincodeRequired": "Pincode *",
+  "myWishlist": "My Wishlist",
+  "wishlistEmpty": "Your wishlist is empty",
+  "myProfile": "My Profile",
+  "accountSettings": "Account Settings",
+  "wishlist": "Wishlist",
+  "savedAddresses": "Saved Addresses",
+  "pushNotifications": "Push Notifications",
+  "receiveOrderUpdates": "Receive order status updates",
+  "generateBarcodes": "Generate Barcodes for Products",
+  "seedDatabase": "Seed Database (Debug Only)",
+  "seedingDatabase": "Seeding database...",
+  "databaseSeeded": "Database seeded successfully",
+  "databaseAlreadySeeded": "Database was already seeded — nothing to do",
+  "oneTimeSetupSafe": "One-time setup — safe to tap again",
+  "generatingBarcodes": "Generating barcodes...",
+  "addedBarcodesTo": "{count, plural, one{Added barcode to {count} product} other{Added barcodes to {count} products}}",
+  "@addedBarcodesTo": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "allProductsHaveBarcodes": "All products already have barcodes.",
+  "logout": "Logout",
+  "profileUpdatedSuccessfully": "Profile updated successfully",
+  "failedToUpdateProfile": "Failed to update profile",
+  "editProfile": "Edit Profile",
+  "edit": "Edit",
+  "delete": "Delete",
+  "viewAll": "View All",
+  "pleaseEnterYourName": "Please enter your name",
+  "phoneNumber": "Phone Number",
+  "saveChanges": "Save Changes"
+}

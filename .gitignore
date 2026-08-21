@@ -1,0 +1,36 @@
+# Java
+backend/target/
+*.log
+
+# Node
+partner_portal/node_modules/
+partner_portal/.next/
+partner_portal/out/
+partner_portal/tsconfig.tsbuildinfo
+
+# Flutter
+consumer_flutter/.dart_tool/
+consumer_flutter/build/
+consumer_flutter/.packages
+consumer_flutter/.flutter-plugins
+consumer_flutter/.flutter-plugins-dependencies
+consumer_flutter/.metadata
+consumer_flutter/android/.gradle/
+consumer_flutter/android/local.properties
+consumer_flutter/ios/Pods/
+consumer_flutter/ios/.symlinks/
+consumer_flutter/.wired_backup/
+
+# IDE
+.idea/
+*.iml
+.vscode/
+
+# OS junk
+.DS_Store
+Thumbs.db
+
+# Local env
+.env
+.env.*
+!.env.example
