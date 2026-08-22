@@ -18,9 +18,15 @@ jobs:
     # hit a real database don't need YOUR local nearnow_db. Same instinct
     # as Testcontainers (Master Prompt Section 5, Part A) — a fresh,
     # throwaway database per run.
+    #
+    # IMPORTANT: this must be the pgvector image, not plain postgres —
+    # schema.sql runs `CREATE EXTENSION IF NOT EXISTS vector` on startup
+    # for semantic product search, which a stock Postgres image does not
+    # ship with. docker-compose.yml already uses this same image for
+    # exactly this reason; CI needs to match it.
     services:
       postgres:
-        image: postgres:16
+        image: pgvector/pgvector:pg16
         env:
           POSTGRES_DB: nearnow_db_test
           POSTGRES_PASSWORD: ci_test_password
@@ -45,8 +51,19 @@ jobs:
 
       - name: Build and run tests
         env:
+          # Must match the "postgres" service above exactly — the default
+          # in application.properties points at "nearnow_db", but the
+          # service database here is named "nearnow_db_test".
+          SPRING_DATASOURCE_URL: jdbc:postgresql://localhost:5432/nearnow_db_test
           DB_PASSWORD: ci_test_password
           JWT_SECRET: ci_test_secret_not_for_real_use_1234567890
+          # spring.mail.username/password have NO default in
+          # application.properties (correct — a real deployment must
+          # supply real ones) — CI needs *some* value so the context can
+          # start, even though nothing in this test suite actually sends
+          # a real email over SMTP.
+          MAIL_USERNAME: ci-test@example.com
+          MAIL_APP_PASSWORD: ci_test_app_password
         run: ./mvnw clean verify
 
   build-and-push-image:
