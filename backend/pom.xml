@@ -20,7 +20,25 @@
 
     <properties>
         <java.version>17</java.version>
+        <testcontainers.version>1.20.4</testcontainers.version>
     </properties>
+
+    <!-- Testcontainers' own BOM pins every testcontainers-* module (core,
+         junit-jupiter, postgresql) to mutually-compatible versions, the
+         same reason spring-boot-starter-parent exists above — without
+         it, mixing module versions by hand is a common source of
+         hard-to-diagnose test-only classpath errors. -->
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>org.testcontainers</groupId>
+                <artifactId>testcontainers-bom</artifactId>
+                <version>${testcontainers.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
 
     <dependencies>
 
@@ -129,6 +147,23 @@
         <dependency>
             <groupId>org.springframework.security</groupId>
             <artifactId>spring-security-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+
+        <!-- Testcontainers: spins up a REAL Postgres (and, separately
+             below, a real Redis) in Docker for the duration of the test
+             run only — this is what lets the integration test exercise
+             the actual SQL (locking queries, unique constraints, the
+             pgvector extension) instead of an in-memory H2 stand-in that
+             would silently accept SQL Postgres would reject, or vice versa. -->
+        <dependency>
+            <groupId>org.testcontainers</groupId>
+            <artifactId>junit-jupiter</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.testcontainers</groupId>
+            <artifactId>postgresql</artifactId>
             <scope>test</scope>
         </dependency>
 
