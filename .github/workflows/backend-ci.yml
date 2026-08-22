@@ -14,6 +14,15 @@ jobs:
   build-and-test:
     runs-on: ubuntu-latest
 
+    # This is a monorepo — backend/, consumer_flutter/, and partner_portal/
+    # all live under one repo root. Every `run:` step in this job defaults
+    # to the backend/ subfolder, since that's where pom.xml and mvnw
+    # actually live (NOT the repo root — that was the bug: mvnw was being
+    # invoked from the repo root where it doesn't exist).
+    defaults:
+      run:
+        working-directory: backend
+
     # A disposable Postgres, spun up ONLY for this CI run, so tests that
     # hit a real database don't need YOUR local nearnow_db. Same instinct
     # as Testcontainers (Master Prompt Section 5, Part A) — a fresh,
@@ -91,7 +100,10 @@ jobs:
       - name: Build and push image
         uses: docker/build-push-action@v5
         with:
-          context: .
+          # Same monorepo reasoning as above — the Dockerfile lives in
+          # backend/, so the build context must point there, not at the
+          # repo root (which has no Dockerfile of its own).
+          context: ./backend
           push: true
           tags: ghcr.io/${{ github.repository }}:latest
 
