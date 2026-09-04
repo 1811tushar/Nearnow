@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:provider/provider.dart';
+import 'package:razorpay_flutter/razorpay_flutter.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../providers/cart_provider.dart';
 import '../../auth/providers/auth_provider.dart';
 import '../../../core/widgets/loading_widget.dart';
@@ -28,10 +30,21 @@ class _CartPageState extends State<CartPage> {
   bool _isPlacingOrder = false;
   String _paymentMethod = 'Cash on Delivery';
 
+  // One Razorpay instance per page — event callbacks below are wired
+  // once in initState and torn down in dispose, standard razorpay_flutter
+  // usage pattern.
+  late final Razorpay _razorpay;
+  AddressModel? _pendingAddressForRazorpay;
+  String? _uidForRazorpay;
 
   @override
   void initState() {
     super.initState();
+    _razorpay = Razorpay();
+    _razorpay.on(Razorpay.EVENT_PAYMENT_SUCCESS, _handleRazorpaySuccess);
+    _razorpay.on(Razorpay.EVENT_PAYMENT_ERROR, _handleRazorpayError);
+    _razorpay.on(Razorpay.EVENT_EXTERNAL_WALLET, _handleRazorpayExternalWallet);
+
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final uid = context.read<AuthProvider>().user?.uid;
       if (uid != null) {
@@ -39,6 +52,12 @@ class _CartPageState extends State<CartPage> {
         context.read<AddressProvider>().fetchAddresses(uid);
       }
     });
+  }
+
+  @override
+  void dispose() {
+    _razorpay.clear();
+    super.dispose();
   }
 
   Future<void> _startMockCheckout({required String uid, required AddressModel deliveryAddress}) async {
@@ -60,7 +79,7 @@ class _CartPageState extends State<CartPage> {
       );
       if (outcome == null) return;
       setState(() => _isPlacingOrder = true);
-      await PaymentService().verifyPayment(
+      await PaymentService().verifyMockPayment(
         paymentReference: payment.paymentReference,
         outcome: outcome,
         addressId: deliveryAddress.id,
@@ -74,6 +93,126 @@ class _CartPageState extends State<CartPage> {
     } finally {
       if (mounted) setState(() => _isPlacingOrder = false);
     }
+  }
+
+  /// Real Razorpay flow:
+  /// 1. Ask our backend to create a real Razorpay order (test mode) —
+  ///    returns Razorpay's order id + the public key id + amount.
+  /// 2. Open Razorpay's own checkout sheet with those values. If the user
+  ///    picks UPI there, Razorpay hands off to whichever UPI app (Google
+  ///    Pay, PhonePe, ...) is installed to actually authorize the payment.
+  /// 3. Razorpay calls us back (via the event handlers below) with a
+  ///    payment id + signature, which we send to our backend to verify
+  ///    and place the order — the order is never placed on the strength
+  ///    of the app alone, only after the backend confirms the signature.
+  Future<void> _startRazorpayCheckout({required String uid, required AddressModel deliveryAddress}) async {
+    setState(() => _isPlacingOrder = true);
+    try {
+      final payment = await PaymentService().createOrder();
+      if (payment.mode != 'RAZORPAY' || payment.razorpayKeyId == null) {
+        // Server isn't configured for real Razorpay payments right now
+        // (payment.mode isn't RAZORPAY, or keys are missing) — fail
+        // clearly instead of silently trying to open a broken checkout.
+        throw Exception('Online payment is not available right now. Please try Cash on Delivery.');
+      }
+
+      _pendingAddressForRazorpay = deliveryAddress;
+      _uidForRazorpay = uid;
+      // Razorpay's checkout runs in a SEPARATE native Android Activity,
+      // not a Flutter widget — that Activity switch can trigger Flutter's
+      // engine to pause/detach in ways that occasionally reset this
+      // State object's fields to null before the success callback fires
+      // (observed as a silent no-op: payment succeeds, but the order
+      // never gets placed because uid/address had already gone null).
+      // SharedPreferences survives that switch, so _handleRazorpaySuccess
+      // below falls back to it if the in-memory fields are gone.
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString('pending_razorpay_uid', uid);
+      await prefs.setString('pending_razorpay_address_id', deliveryAddress.id.toString());
+
+      final options = {
+        'key': payment.razorpayKeyId,
+        'amount': (payment.amount * 100).round(), // paise, matches backend's calculation
+        'currency': payment.currency,
+        'name': 'NearNow',
+        'description': 'Order payment',
+        'order_id': payment.paymentReference, // Razorpay's real order id
+        // Nudges the checkout sheet to show UPI (and therefore the
+        // Google Pay / PhonePe hand-off) as a prominent option, rather
+        // than defaulting straight to cards.
+        'method': {'upi': true, 'card': true, 'netbanking': true, 'wallet': true},
+      };
+
+      _razorpay.open(options);
+    } catch (e) {
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(e.toString())));
+      if (mounted) setState(() => _isPlacingOrder = false);
+    }
+  }
+
+  Future<void> _handleRazorpaySuccess(PaymentSuccessResponse response) async {
+    String? uid = _uidForRazorpay;
+    String? addressId = _pendingAddressForRazorpay?.id;
+    if (uid == null || addressId == null) {
+      // In-memory fields were lost (see the comment where they're set,
+      // just before _razorpay.open) — recover from SharedPreferences
+      // instead of silently doing nothing.
+      final prefs = await SharedPreferences.getInstance();
+      uid ??= prefs.getString('pending_razorpay_uid');
+      addressId ??= prefs.getString('pending_razorpay_address_id');
+    }
+    if (uid == null || addressId == null) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(
+              'Payment received, but we lost track of your delivery address. '
+              'Please contact support with your payment ID: ${response.paymentId ?? "unknown"}')),
+        );
+      }
+      return;
+    }
+
+    try {
+      await PaymentService().verifyRazorpayPayment(
+        razorpayOrderId: response.orderId ?? '',
+        razorpayPaymentId: response.paymentId ?? '',
+        razorpaySignature: response.signature ?? '',
+        addressId: addressId,
+      );
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.remove('pending_razorpay_uid');
+      await prefs.remove('pending_razorpay_address_id');
+      if (!mounted) return;
+      await context.read<CartProvider>().clearCart(uid);
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Payment successful. Order placed.')),
+      );
+      AppShell.of(context)?.switchToTab(2);
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Payment received but order placement failed: $e')),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isPlacingOrder = false);
+    }
+  }
+
+  void _handleRazorpayError(PaymentFailureResponse response) {
+    if (!mounted) return;
+    setState(() => _isPlacingOrder = false);
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('Payment failed: ${response.message ?? "Please try again."}')),
+    );
+  }
+
+  void _handleRazorpayExternalWallet(ExternalWalletResponse response) {
+    if (!mounted) return;
+    setState(() => _isPlacingOrder = false);
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('Redirected to ${response.walletName ?? "external wallet"}.')),
+    );
   }
 
   Future<void> _placeOrder({
@@ -119,17 +258,30 @@ class _CartPageState extends State<CartPage> {
 
   Future<void> _selectPaymentMethod() async {
     final l10n = AppLocalizations.of(context)!;
-    const methods = ['Cash on Delivery', 'Mock Online Payment'];
+    const methods = ['Cash on Delivery', 'Razorpay', 'Mock Online Payment'];
     String labelFor(String method) {
       switch (method) {
         case 'Cash on Delivery':
           return l10n.cashOnDelivery;
+        case 'Razorpay':
+          return 'UPI / Cards / Netbanking';
         case 'Mock Online Payment':
           return 'Mock online payment';
         case 'UPI':
           return l10n.upi;
         default:
           return l10n.card;
+      }
+    }
+
+    String subtitleFor(String method) {
+      switch (method) {
+        case 'Cash on Delivery':
+          return l10n.payWhenOrderArrives;
+        case 'Razorpay':
+          return 'Pay via Google Pay, PhonePe, card, or netbanking';
+        default:
+          return 'Development-only payment; no real money is charged';
       }
     }
 
@@ -145,7 +297,7 @@ class _CartPageState extends State<CartPage> {
             value: method,
             groupValue: _paymentMethod,
             title: Text(labelFor(method)),
-            subtitle: Text(method == 'Cash on Delivery' ? l10n.payWhenOrderArrives : 'Development-only payment; no real money is charged'),
+            subtitle: Text(subtitleFor(method)),
             onChanged: (value) => Navigator.pop(context, value),
           )).toList(),
         ),
@@ -158,6 +310,8 @@ class _CartPageState extends State<CartPage> {
     switch (_paymentMethod) {
       case 'Cash on Delivery':
         return l10n.cashOnDelivery;
+      case 'Razorpay':
+        return 'UPI / Cards / Netbanking';
       case 'Mock Online Payment':
         return 'Mock online payment';
       case 'UPI':
@@ -420,6 +574,8 @@ onPressed: (uid == null || selectedAddress == null)
                       : () {
                           if (_paymentMethod == 'Mock Online Payment') {
                             _startMockCheckout(uid: uid, deliveryAddress: selectedAddress);
+                          } else if (_paymentMethod == 'Razorpay') {
+                            _startRazorpayCheckout(uid: uid, deliveryAddress: selectedAddress);
                           } else {
                             _placeOrder(
                               uid: uid,

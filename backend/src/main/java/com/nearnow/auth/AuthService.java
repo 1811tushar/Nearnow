@@ -46,7 +46,14 @@ public class AuthService {
     // into a clean 409 instead of an opaque 500.
     @Transactional
     public AuthResponseDTO register(RegisterRequestDTO request) {
-        if (userRepository.existsByEmail(request.getEmail())) {
+        // See InputSanitizer's javadoc: this is what actually stopped a
+        // real 500 error we hit during testing ("invalid byte sequence
+        // for encoding UTF8: 0x00") — some client input contained a raw
+        // null byte that Postgres' text columns flatly reject.
+        String email = com.nearnow.common.util.InputSanitizer.clean(request.getEmail());
+        String fullName = com.nearnow.common.util.InputSanitizer.clean(request.getFullName());
+
+        if (userRepository.existsByEmail(email)) {
             throw new DuplicateResourceException("An account with this email already exists");
         }
 
@@ -58,9 +65,9 @@ public class AuthService {
         String hashedPassword = passwordEncoder.encode(request.getPassword());
 
         User user = new User(
-                request.getEmail(),
+                email,
                 hashedPassword,
-                request.getFullName(),
+                fullName,
                 "" // phone — not collected at registration in the current Flutter flow
         );
 
@@ -207,8 +214,8 @@ public class AuthService {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new ResourceNotFoundException("User no longer exists"));
 
-        user.setFullName(request.getFullName());
-        user.setPhone(request.getPhone());
+        user.setFullName(com.nearnow.common.util.InputSanitizer.clean(request.getFullName()));
+        user.setPhone(com.nearnow.common.util.InputSanitizer.clean(request.getPhone()));
         if (request.getPhotoUrl() != null) {
             user.setPhotoUrl(request.getPhotoUrl());
         }

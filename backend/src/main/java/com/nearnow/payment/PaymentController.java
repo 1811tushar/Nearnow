@@ -24,4 +24,19 @@ public class PaymentController {
         return ResponseEntity.ok(ApiResponse.success(
                 paymentService.verifyPayment(authentication.getName(), request), "Payment confirmed, order placed"));
     }
+
+    // Called directly by Razorpay's servers, not by our own frontend — no
+    // JWT is (or can be) attached to this request, hence no `Authentication`
+    // parameter. The @RequestBody is captured as a raw String deliberately:
+    // signature verification needs the EXACT bytes Razorpay signed, and any
+    // automatic JSON-to-DTO deserialization here would risk re-serializing
+    // it slightly differently (field order, whitespace) and breaking the
+    // signature check.
+    @PostMapping("/webhook")
+    public ResponseEntity<String> razorpayWebhook(
+            @RequestHeader("X-Razorpay-Signature") String signature,
+            @RequestBody String rawBody) {
+        paymentService.handleRazorpayWebhook(rawBody, signature);
+        return ResponseEntity.ok("ok");
+    }
 }

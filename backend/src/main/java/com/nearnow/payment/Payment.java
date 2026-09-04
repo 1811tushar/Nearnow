@@ -12,6 +12,11 @@ public class Payment {
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    // For MOCK mode this is "MOCK_<uuid>". For RAZORPAY mode this IS
+    // Razorpay's own order id (e.g. "order_Abc123") — reusing this column
+    // rather than adding a parallel "gatewayOrderId" column keeps the
+    // existing findByPaymentReferenceForUpdate lookup working unchanged
+    // for both modes.
     @Column(nullable = false, unique = true)
     private String paymentReference;
 
@@ -29,6 +34,13 @@ public class Payment {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "order_id")
     private Order order;
+
+    // Razorpay's own payment id (e.g. "pay_Xyz789"), set only once a
+    // payment actually succeeds. Null for MOCK payments and for RAZORPAY
+    // payments that were created but never completed. This is what a
+    // refund or support-lookup call would key off later.
+    @Column(nullable = true)
+    private String gatewayPaymentId;
 
     @Column(nullable = false, updatable = false)
     private Instant createdAt;
@@ -52,5 +64,7 @@ public class Payment {
     public User getUser() { return user; }
     public Order getOrder() { return order; }
     public void setOrder(Order order) { this.order = order; }
+    public String getGatewayPaymentId() { return gatewayPaymentId; }
+    public void setGatewayPaymentId(String gatewayPaymentId) { this.gatewayPaymentId = gatewayPaymentId; }
     public Instant getCreatedAt() { return createdAt; }
 }

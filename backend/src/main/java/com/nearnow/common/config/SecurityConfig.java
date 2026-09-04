@@ -124,6 +124,22 @@ public class SecurityConfig {
                         // show-details=when-authorized (set above) still
                         // limits what an unauthenticated caller can see.
                         .requestMatchers("/actuator/**").permitAll()
+                        // Swagger UI + its underlying OpenAPI JSON — public
+                        // so anyone (interviewer, teammate) can browse the
+                        // API docs without a token. Docs-only exposure: it
+                        // describes endpoints, it doesn't execute them
+                        // without auth (the JWT filter still guards the
+                        // actual /api/** calls made FROM the Swagger UI).
+                        .requestMatchers("/swagger-ui/**", "/swagger-ui.html", "/v3/api-docs/**").permitAll()
+                        // Razorpay's servers call this directly — no JWT
+                        // exists for that call, and the request is
+                        // independently authenticated by its own HMAC
+                        // signature (verified inside PaymentService), not
+                        // by Spring Security. This is the one endpoint in
+                        // the whole API where "public" and "protected" both
+                        // apply simultaneously, just via two different
+                        // mechanisms.
+                        .requestMatchers("/api/payments/webhook").permitAll()
                         // Everything else — including /api/auth/me — defaults
                         // to "must be authenticated."
                         .anyRequest().authenticated()
