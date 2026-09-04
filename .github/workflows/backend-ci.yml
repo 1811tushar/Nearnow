@@ -89,13 +89,21 @@ jobs:
     steps:
       - name: Check out code
         uses: actions/checkout@v4
-
       - name: Log in to GitHub Container Registry
         uses: docker/login-action@v3
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }} # provided automatically by GitHub, no manual secret setup needed
+
+      # Docker/GHCR image tags must be all-lowercase, but this repo's
+      # name ("Nearnow") has a capital letter — github.repository would
+      # produce "1811tushar/Nearnow", which Docker rejects. GitHub
+      # Actions expressions have no built-in toLower(), so this step
+      # computes a lowercase version via shell and saves it for the
+      # next step to use.
+      - name: Compute lowercase image name
+        run: echo "IMAGE_NAME=$(echo '${{ github.repository }}' | tr '[:upper:]' '[:lower:]')" >> "$GITHUB_ENV"
 
       - name: Build and push image
         uses: docker/build-push-action@v5
@@ -105,12 +113,4 @@ jobs:
           # repo root (which has no Dockerfile of its own).
           context: ./backend
           push: true
-          tags: ghcr.io/${{ github.repository }}:latest
-
-      # STOPS HERE deliberately — actually deploying this image to a
-      # running server needs a hosting-platform decision (Render,
-      # Railway, Fly.io, etc.) that hasn't been made yet. Adding a
-      # deploy step without knowing the real target would mean guessing
-      # infrastructure that doesn't exist — a genuine scope-boundary,
-      # not an oversight. Add a "deploy" job here once that decision
-      # is made.
+          tags: ghcr.io/${{ env.IMAGE_NAME }}:latest
