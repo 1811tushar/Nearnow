@@ -109,7 +109,7 @@ class OrderPlacementIntegrationTest {
         ResponseEntity<String> response = restTemplate.postForEntity(
                 "/api/auth/register", new HttpEntity<>(body, headers), String.class);
 
-        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.CREATED);
         JsonNode root = objectMapper.readTree(response.getBody());
         assertThat(root.path("success").asBoolean()).isTrue();
         return root.path("data").path("token").asText();
