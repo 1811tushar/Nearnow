@@ -207,26 +207,24 @@ class OrderPlacementIntegrationTest {
     void placeOrder_requestingMoreThanAvailableStock_isRejectedWith400AndStockUnchanged() throws Exception {
         String token = registerAndGetToken("insufficient-stock@nearnow-test.com");
         Product product = seedActiveProduct("Scarce Item", new BigDecimal("100.00"), 2); // only 2 in stock
-        Long addressId = createAddressAndGetId(token);
 
+        // CartService.addToCart() enforces stock at the moment an item is
+        // added — not just at order-placement time — so a request for
+        // more units than exist is rejected right here, before the item
+        // ever reaches the cart (checkout is never even attempted: an
+        // empty cart never gets that far, so no address is needed here).
         String addToCartBody = """
                 {"productId":%d,"quantity":5}
                 """.formatted(product.getId()); // asking for more than exists
-        restTemplate.postForEntity(
-                "/api/cart/add", new HttpEntity<>(addToCartBody, authHeaders(token)), String.class);
-
-        String placeOrderBody = """
-                {"addressId":%d,"paymentMethod":"COD"}
-                """.formatted(addressId);
         ResponseEntity<String> response = restTemplate.postForEntity(
-                "/api/orders", new HttpEntity<>(placeOrderBody, authHeaders(token)), String.class);
+                "/api/cart/add", new HttpEntity<>(addToCartBody, authHeaders(token)), String.class);
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST);
         JsonNode body = objectMapper.readTree(response.getBody());
         assertThat(body.path("success").asBoolean()).isFalse();
         assertThat(body.path("message").asText()).contains("available");
 
-        // Nothing should have been deducted from a rejected checkout.
+        // Nothing should have been deducted from a rejected add-to-cart.
         Product unchanged = productRepository.findById(product.getId()).orElseThrow();
         assertThat(unchanged.getStock()).isEqualTo(2);
     }
